@@ -70,6 +70,9 @@ const page = () => {
 
   const [questions, setQuestions] = useState([]);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+
   const oks = [
     {
       questionText:
@@ -879,6 +882,10 @@ const page = () => {
   };
 
   const handleSubmit = async () => {
+    if (isSubmitting) {
+      showWarning("Please wait Submitting on progress...");
+      return; // Prevent double submission
+    }
     const unanswered = questions.filter((_, idx) => {
       const ans = answers[idx];
       return !ans || ans.length === 0;
@@ -897,7 +904,7 @@ const page = () => {
 
       if (
         t === "oxford knee score (oks)" ||
-        t === "knee injury and ostheoarthritis outcome score (koos)" ||
+        t === "knee injury and ostheoarthritis outcome score, joint replacement (koos, jr)" ||
         t === "forgotten joint score (fjs)"
       ) {
         const total = calculateTotalScore(answers);
@@ -912,7 +919,7 @@ const page = () => {
         console.log("KSS Normalized Score:", score);
         scores = [score];
       }
-
+      setIsSubmitting(true);
       console.log("Total KSS Score:", scores);
       await sendQuestionnaireScores(scores, Date.now());
       await updateQuestionnaireStatus();
@@ -926,6 +933,8 @@ const page = () => {
   };
 
   const sendQuestionnaireScores = async (score, timestamp) => {
+    
+
     if (typeof window !== "undefined") {
       try {
         const uhid = sessionStorage.getItem("uhid"); // Get user UHID
@@ -963,6 +972,9 @@ const page = () => {
         console.error("PUT Error:", error);
         // toast.error("Update failed!");
       }
+      finally{
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -978,6 +990,8 @@ const page = () => {
           completed: cmp,
         };
 
+        setIsSubmitting(false);
+
         console.log("Sending to:", `${API_URL}update-questionnaire-status`);
         console.log("Payload:", payload);
 
@@ -991,6 +1005,9 @@ const page = () => {
       } catch (error) {
         console.error("PUT Error (status):", error);
         // alert("❌ Failed to update questionnaire status.");
+      }
+      finally{
+        setIsSubmitting(false);
       }
     }
   };
@@ -1303,7 +1320,7 @@ const page = () => {
                             }, 2500);
                           } else {
                             setWarning("");
-                            handleSubmit();
+                            !isSubmitting ? handleSubmit() : undefined
                           }
                         } else {
                           setWarning("");
@@ -1311,7 +1328,7 @@ const page = () => {
                         }
                       }}
                     >
-                      {currentIndex === questions.length - 1 ? "SEND" : "NEXT"}
+                      {currentIndex === questions.length - 1 ? isSubmitting ? "POSTING..." : "POST" : "NEXT"}
                     </p>
                   </div>
                 </div>
