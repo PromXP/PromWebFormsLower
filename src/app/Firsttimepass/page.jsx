@@ -65,7 +65,7 @@ const page = ({ passopen, onClose }) => {
 
       try {
         const res = await axios.put(
-          API_URL+"reset-password",
+          API_URL+"patients/reset-password",
           payload
         );
         sessionStorage.setItem("password", userPassword);
