@@ -1138,6 +1138,25 @@ const page = () => {
     ];
   }
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Only react if currentQuestion exists
+      if (!currentQuestion || !currentQuestion.options) return;
+  
+      const optionCount = currentQuestion.options.length;
+      const pressedNumber = parseInt(e.key, 10);
+  
+      // Check if a valid number key was pressed (1-based)
+      if (!isNaN(pressedNumber) && pressedNumber >= 1 && pressedNumber <= optionCount) {
+        const optionToSelect = currentQuestion.options[pressedNumber - 1];
+        handleOptionClick(optionToSelect);
+      }
+    };
+  
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [currentQuestion, handleOptionClick]);
+
   return (
     <div
       className={` bg-white flex flex-col relative ${
@@ -1276,7 +1295,7 @@ const page = () => {
                           className="accent-[#005585]"
                         />
                       )}
-                      <span className="text-sm">{option}</span>
+                      <span className="text-sm">{`${idx + 1}. ${option}`}</span>
                     </label>
                   ))}
               </div>
